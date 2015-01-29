@@ -36,15 +36,24 @@ timeTable = soup.find_all(id="ACE_STDNT_ENRL_SSV2$0", limit=1)[0]
 # print timeTable.prettify()
 
 def extractDataFromHtmlTable(timeTable):
-	cousesInfoData = {}
+	coursesInfoData = {}
 	# Extract information for each courses
 	courseInfoTableHtml = timeTable.find_all(class_ = 'PSGROUPBOXWBO')
 	for courseInfo in courseInfoTableHtml:
 		courseTitle = courseInfo.find(class_ = 'PAGROUPDIVIDER').string
 		# Find id which is trCLASS_MTG_VW.+
 		courseScheduleTableHtml = courseInfo.find_all('tr', id=re.compile('trCLASS_MTG_VW\\$\d_row\d'))
-		
-		
-		pprint.pprint(courseScheduleTableHtml)
-
-extractDataFromHtmlTable(timeTable)
+		courseTimeSlots = []
+		for row in courseScheduleTableHtml:
+			timeSlot = {}
+			time = row.find_all('div', id=re.compile('win0divMTG_SCHED\\$\d'))[0].get_text()
+			timeSlot['time'] = time
+			# win0divMTG_LOC$0
+			room = row.find_all('div', id=re.compile('win0divMTG_LOC\\$\d'))[0].get_text()
+			timeSlot['room'] = room
+			date = row.find_all('div', id=re.compile('win0divMTG_DATES\\$\d'))[0].get_text()
+			timeSlot['date'] = date
+			courseTimeSlots.append(timeSlot)
+		coursesInfoData[courseTitle] = courseTimeSlots
+	return coursesInfoData
+pprint.pprint(extractDataFromHtmlTable(timeTable))
